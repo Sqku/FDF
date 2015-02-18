@@ -6,7 +6,7 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/02/02 16:48:18 by ahua              #+#    #+#             */
-/*   Updated: 2015/02/11 18:55:42 by ahua             ###   ########.fr       */
+/*   Updated: 2015/02/18 17:48:27 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,8 @@ typedef	struct	s_env
 	void	*win;
 	char	*file;
 	int		nbx;
+	int		nby;
+	int		zoom;
 }				t_env;
 
 typedef	struct	s_point
@@ -52,16 +54,19 @@ typedef	struct	s_line
 	int		dy;
 }				t_line;
 
-void			line(t_point p1, t_point p2, void *mlx, void *win);
-void			line_1(t_line line, void *mlx, void *win);
-void			line_2(t_line line, void *mlx, void *win);
-void			draw(void *mlx, void *win, char *file);
+void			line(t_point p1, t_point p2, t_env *e);
+void			line_1(t_line line, t_env *e);
+void			line_2(t_line line, t_env *e);
+void			draw(t_env *e);
 int				mouse_hook(int button, int x, int y, t_env *e);
 int				key_hook(int keycode, t_env *e);
 int				expose_hook(t_env *e);
 int				get_next_line(int fd, char **line);
 t_point			f3d_2d(t_3d p3d);
 int				nb_line(char *file);
-int				**map(char *file, int nb_line);
+int				**map(char *file, int nb, t_env *e);
+void			get_map(int fd, char **buffer, int **mapi, t_env *e);
+void			get_map2(char **splity, int **map, int i, t_env *e);
+
 
 #endif
