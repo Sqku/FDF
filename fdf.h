@@ -6,7 +6,7 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/02/02 16:48:18 by ahua              #+#    #+#             */
-/*   Updated: 2015/02/19 19:26:05 by ahua             ###   ########.fr       */
+/*   Updated: 2015/02/20 18:01:30 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,9 +58,9 @@ typedef	struct	s_line
 	int		dy;
 }				t_line;
 
-void			line(t_point p1, t_point p2, t_env *e);
-void			line_1(t_line line, t_env *e);
-void			line_2(t_line line, t_env *e);
+void			line(t_point p1, t_point p2, t_env *e, int color);
+void			line_1(t_line line, t_env *e, int color);
+void			line_2(t_line line, t_env *e, int color);
 void			draw(t_env *e);
 void			draw_x(t_3d d0, t_3d d1, t_env *e, int **coord);
 void			draw_y(t_3d d0, t_3d d2, t_env *e, int **coord);
@@ -76,7 +76,7 @@ void			get_map2(char **splity, int **map, int i, t_env *e);
 void			fill_pallette1(int tab[30]);
 void			fill_pallette2(int tab[30]);
 void			fill_pallette(int tab[30]);
-int				long_map(int x, int min, int max);
+int				l_map(int x, int min, int max);
 
 
 

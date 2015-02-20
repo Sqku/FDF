@@ -6,13 +6,13 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2014/12/15 12:33:18 by ahua              #+#    #+#             */
-/*   Updated: 2015/02/19 19:43:12 by ahua             ###   ########.fr       */
+/*   Updated: 2015/02/20 18:07:48 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fdf.h"
 
-void	line(t_point p1, t_point p2, t_env *e)
+void	line(t_point p1, t_point p2, t_env *e, int color)
 {
 	t_line		line;
 
@@ -22,14 +22,14 @@ void	line(t_point p1, t_point p2, t_env *e)
 	line.dy = abs(p2.y - p1.y);
 	line.p1 = p1;
 	line.p2 = p2;
-	mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, 0xFF0000);
+	mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, color);
 	if (line.dx > line.dy)
-		line_1(line, e);
+		line_1(line, e, color);
 	else
-		line_2(line, e);
+		line_2(line, e, color);
 }
 
-void	line_1(t_line line, t_env *e)
+void	line_1(t_line line, t_env *e, int color)
 {
 	int			i;
 	int			cumul;
@@ -45,11 +45,11 @@ void	line_1(t_line line, t_env *e)
 			cumul -= line.dx;
 			line.p1.y += line.inc.y;
 		}
-		mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, 0xCDCD0D);
+		mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, color);
 	}
 }
 
-void	line_2(t_line line, t_env *e)
+void	line_2(t_line line, t_env *e, int color)
 {
 	int			i;
 	int			cumul;
@@ -65,7 +65,7 @@ void	line_2(t_line line, t_env *e)
 			cumul -= line.dy;
 			line.p1.x += line.inc.x;
 		}
-		mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, 0x357AB7);
+		mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, color);
 	}
 }
 
@@ -79,9 +79,9 @@ t_point	f3d_2d(t_3d p3d)
 }
 
 
-int		long_map(int x, int min, int max)
+int		l_map(int x, int min, int max)
 {
-	return (x - min) * (29) / (max - min);
+	return ((x - min) * (29) / (max - min));
 }
 
 
@@ -123,7 +123,7 @@ void	fill_pallette2(int tab[30])
 	tab[29] = 0xFFFFFF;
 }
 
-void	fill_palette(int tab[30])
+void	fill_pallette(int tab[30])
 {
 	fill_pallette1(tab);
 	fill_pallette2(tab);
@@ -163,7 +163,7 @@ void	draw_x(t_3d d0, t_3d d1, t_env *e, int **coord)
 			d1.z = coord[y][x + 1];
 			p0 = f3d_2d(d0);
 			p1 = f3d_2d(d1);
-			line(p0, p1, e);
+			line(p0, p1, e, e->tab[l_map((d0.z + d1.z) / 2, e->min, e->max)]);
 			x++;
 		}
 		y++;
@@ -191,14 +191,12 @@ void	draw_y(t_3d d0, t_3d d2, t_env *e, int **coord)
 			d2.z = coord[y + 1][x];
 			p0 = f3d_2d(d0);
 			p2 = f3d_2d(d2);
-			line(p0, p2, e);
+			line(p0, p2, e, e->tab[l_map((d0.z + d2.z) / 2, e->min, e->max)]);
 			y++;
 		}
 		x++;
 	}
 }
-
-
 
 
 int	nb_line(char *file)
@@ -208,6 +206,16 @@ int	nb_line(char *file)
 	char	*ligne;
 
 	fd = open(file, O_RDONLY);
+	if (fd == -1)
+	{
+		ft_putstr_fd("fdf: Map does not exist or is invalid\n", 2);
+		exit (0);
+	}
+	if (get_next_line(fd, &ligne) == -1)
+	{
+		ft_putstr_fd("fdf: Map is a directory\n", 2);
+		exit(0);
+	}
 	i = 0;
 	while (get_next_line(fd, &ligne) > 0)
 		i++;
@@ -220,11 +228,14 @@ int	**map(char *file, int nb, t_env *e)
 	int		fd;
 	char	**buff;
 	int		**map;
+	int		tmp;
 
 	fd = open(file, O_RDONLY);
 	buff = (char **)malloc(sizeof(char *) * (nb + 1));
 	map = (int **)malloc(sizeof(int *) * (nb + 1));
 	get_map(fd, buff, map, e);
+	printf("min = %d\n", e->min);
+	printf("max = %d\n", e->max);
 	close(fd);
 	return (map);
 }
@@ -245,7 +256,6 @@ void	get_map(int fd, char **buffer, int **mapi, t_env *e)
 		get_map2(split, mapi, i, e);
 		free(buffer[i]);
 		free(split);
-		//ft_putchar('\n');
 		i++;
 	}
 	free(buffer);
@@ -259,20 +269,14 @@ void	get_map2(char **splity, int **map, int i, t_env *e)
 	while (splity[y])
 	{
 		map[i][y] = ft_atoi(splity[y]) * -1;
-		if (map[i][y] > e->max)
+		if (map[i][y] < e->max)
 			e->max = map[i][y];
-		if (map[i][y] < e->min)
+		if (map[i][y] > e->min)
 			e->min = map[i][y];
-		//ft_putnbr(map[i][y]);
-		//ft_putchar(' ');
 		y++;
 		e->nbx = y;
 		free(splity[y]);
 	}
-	e->max = e->max * 1;
-	e->min = e->min * 1;
-	printf("min = %d\n", e->min);
-	printf("max = %d\n", e->max);
 }
 
 int	mouse_hook(int button, int x, int y, t_env *e)
@@ -310,17 +314,23 @@ int	expose_hook(t_env *e)
 int	main(int ac, char **av)
 {
 	t_env	e;
-
-	e.min = 1000;
-	e.max = -1000;
-	e.nby = nb_line(av[1]);
-	e.zoom = 5;
-	e.file = av[1];
-	e.mlx = mlx_init();
-	e.win = mlx_new_window(e.mlx, 1980, 1200, "42");
-	mlx_key_hook(e.win, key_hook, &e);
-	mlx_mouse_hook(e.win, mouse_hook, &e);
-	mlx_expose_hook(e.win, expose_hook, &e);
-	mlx_loop(e.mlx);
+	
+	if (ac == 2)
+	{
+		fill_pallette(e.tab);
+		e.min = -10000;
+		e.max = 10000;
+		e.nby = nb_line(av[1]);
+		e.zoom = 5;
+		e.file = av[1];
+		e.mlx = mlx_init();
+		e.win = mlx_new_window(e.mlx, 1980, 1200, "42");
+		mlx_key_hook(e.win, key_hook, &e);
+		mlx_mouse_hook(e.win, mouse_hook, &e);
+		mlx_expose_hook(e.win, expose_hook, &e);
+		mlx_loop(e.mlx);
+	}
+	else 
+		ft_putstr_fd("usage: ./fdf <map.fdf>\n", 2);
 	return (0);
 }
