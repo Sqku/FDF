@@ -6,7 +6,7 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2014/12/15 12:33:18 by ahua              #+#    #+#             */
-/*   Updated: 2015/02/20 18:07:48 by ahua             ###   ########.fr       */
+/*   Updated: 2015/02/23 18:47:31 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,12 +69,12 @@ void	line_2(t_line line, t_env *e, int color)
 	}
 }
 
-t_point	f3d_2d(t_3d p3d)
+t_point	f3d_2d(t_3d p3d, t_env *e)
 {
 	t_point p1;
 
-	p1.x = ((p3d.x) - (p3d.y)) + 800;
-	p1.y = (p3d.z + ((p3d.x) / 2) + ((p3d.y) / 2)) + 400;
+	p1.x = ((p3d.x) - (p3d.y)) + e->move_x;
+	p1.y = (p3d.z + ((p3d.x) / 2) + ((p3d.y) / 2)) + e->move_y;
 	return (p1);
 }
 
@@ -150,7 +150,7 @@ void	draw_x(t_3d d0, t_3d d1, t_env *e, int **coord)
 	t_point	p1;
 
 	y = 0;
-	while (y <= e->nby - 1)
+	while (y <= e->nby)
 	{
 		x = 0;
 		while (x < (e->nbx - 1))
@@ -161,8 +161,8 @@ void	draw_x(t_3d d0, t_3d d1, t_env *e, int **coord)
 			d1.x = (x + 1) * e->zoom;
 			d1.y = y * e->zoom;
 			d1.z = coord[y][x + 1];
-			p0 = f3d_2d(d0);
-			p1 = f3d_2d(d1);
+			p0 = f3d_2d(d0, e);
+			p1 = f3d_2d(d1, e);
 			line(p0, p1, e, e->tab[l_map((d0.z + d1.z) / 2, e->min, e->max)]);
 			x++;
 		}
@@ -181,7 +181,7 @@ void	draw_y(t_3d d0, t_3d d2, t_env *e, int **coord)
 	while (x <= (e->nbx - 1))
 	{
 		y = 0;
-		while (y < e->nby - 1)
+		while (y < e->nby)
 		{
 			d0.x = x * e->zoom;
 			d0.y = y * e->zoom;
@@ -189,8 +189,8 @@ void	draw_y(t_3d d0, t_3d d2, t_env *e, int **coord)
 			d2.x = x * e->zoom;
 			d2.y = (y + 1) * e->zoom;
 			d2.z = coord[y + 1][x];
-			p0 = f3d_2d(d0);
-			p2 = f3d_2d(d2);
+			p0 = f3d_2d(d0, e);
+			p2 = f3d_2d(d2, e);
 			line(p0, p2, e, e->tab[l_map((d0.z + d2.z) / 2, e->min, e->max)]);
 			y++;
 		}
@@ -231,11 +231,17 @@ int	**map(char *file, int nb, t_env *e)
 	int		tmp;
 
 	fd = open(file, O_RDONLY);
-	buff = (char **)malloc(sizeof(char *) * (nb + 1));
-	map = (int **)malloc(sizeof(int *) * (nb + 1));
+	if ((buff = (char **)malloc(sizeof(char *) * (nb + 1))) == NULL)
+	{
+		ft_putstr_fd("malloc fail\n", 2);
+		exit (0);
+	}
+	if ((map = (int **)malloc(sizeof(int *) * (nb + 1))) == NULL)
+	{
+		ft_putstr_fd("malloc fail\n", 2);
+		exit (0);
+	}
 	get_map(fd, buff, map, e);
-	printf("min = %d\n", e->min);
-	printf("max = %d\n", e->max);
 	close(fd);
 	return (map);
 }
@@ -251,6 +257,11 @@ void	get_map(int fd, char **buffer, int **mapi, t_env *e)
 	{
 		mapi[i] = (int *)malloc(sizeof(int) * (ft_strlen(line) + 1));
 		buffer[i] = (char *)malloc(sizeof(char) * (ft_strlen(line) + 1));
+		if (!mapi[i] || !buffer[i])
+		{
+			ft_putstr_fd("malloc fail\n", 2);
+			exit (0);
+		}
 		buffer[i] = ft_strcpy(buffer[i], line);
 		split = ft_strsplit(buffer[i], ' ');
 		get_map2(split, mapi, i, e);
@@ -279,22 +290,25 @@ void	get_map2(char **splity, int **map, int i, t_env *e)
 	}
 }
 
+void	redraw(t_env *e)
+{
+	mlx_clear_window(e->mlx, e->win);
+	draw(e);
+}
+
+
 int	mouse_hook(int button, int x, int y, t_env *e)
 {
-	printf("mouse: %d (%d:%d)\n", button, x, y);
-	if (button == 5)
+	if ((button == 5) && (e->zoom >= 2))
 	{
-		e->zoom -= 10;
-		if (e->zoom >= 5)
-			draw(e);
+		e->zoom -= 2;
+		redraw(e);
 	}
-	if (button == 4)
+	if ((button == 4) && (e->zoom <= 100))
 	{
-		e->zoom += 10;
-		if (e->zoom <= 100)
-			draw(e);
+		e->zoom += 2;
+		redraw(e);
 	}
-
 	return (0);	
 }
 
@@ -303,6 +317,26 @@ int	key_hook(int keycode, t_env *e)
 	printf("key: %d\n", keycode);
 	if (keycode == 65307)
 		exit (0);
+	if ((keycode == 65361) && (e->move_x > -300))
+	{
+		e->move_x -= 50;
+		redraw(e);
+	}
+	if ((keycode == 65363) && (e->move_x < 2200))
+	{
+		e->move_x += 50;
+		redraw(e);
+	}
+	if ((keycode == 65362) && (e->move_y > -300))
+	{
+		e->move_y -= 50;
+		redraw(e);
+	}
+	if ((keycode == 65364) && (e->move_y < 1500))
+	{
+		e->move_y += 50;
+		redraw(e);
+	}
 	return (0);
 }
 int	expose_hook(t_env *e)
@@ -321,9 +355,13 @@ int	main(int ac, char **av)
 		e.min = -10000;
 		e.max = 10000;
 		e.nby = nb_line(av[1]);
-		e.zoom = 5;
+		e.zoom = 20;
+		e.move_x = 800;
+		e.move_y = 400;
 		e.file = av[1];
 		e.mlx = mlx_init();
+		if (e.mlx == 0)
+			exit (0);
 		e.win = mlx_new_window(e.mlx, 1980, 1200, "42");
 		mlx_key_hook(e.win, key_hook, &e);
 		mlx_mouse_hook(e.win, mouse_hook, &e);
