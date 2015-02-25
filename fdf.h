@@ -6,7 +6,7 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/02/02 16:48:18 by ahua              #+#    #+#             */
-/*   Updated: 2015/02/23 18:23:23 by ahua             ###   ########.fr       */
+/*   Updated: 2015/02/25 18:19:52 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,8 @@ typedef	struct	s_env
 	int		max;
 	int		move_x;
 	int		move_y;
+	float	inc;
+	float	turn;
 }				t_env;
 
 typedef	struct	s_point

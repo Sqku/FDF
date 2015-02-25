@@ -6,7 +6,7 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2014/12/15 12:33:18 by ahua              #+#    #+#             */
-/*   Updated: 2015/02/23 18:47:31 by ahua             ###   ########.fr       */
+/*   Updated: 2015/02/25 18:21:12 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,8 +73,8 @@ t_point	f3d_2d(t_3d p3d, t_env *e)
 {
 	t_point p1;
 
-	p1.x = ((p3d.x) - (p3d.y)) + e->move_x;
-	p1.y = (p3d.z + ((p3d.x) / 2) + ((p3d.y) / 2)) + e->move_y;
+	p1.x = ((p3d.x * e->turn) - (p3d.y * e->turn)) + e->move_x;
+	p1.y = (p3d.z + ((p3d.x * e->inc) / 2) + ((p3d.y * e->inc) / 2)) + e->move_y;
 	return (p1);
 }
 
@@ -337,6 +337,26 @@ int	key_hook(int keycode, t_env *e)
 		e->move_y += 50;
 		redraw(e);
 	}
+	if ((keycode == 65453) && (e->inc > 0.0))
+	{
+		e->inc -= 0.1;
+		redraw(e);
+	}
+	if ((keycode == 65451) && (e->inc < 3.0))
+	{
+		e->inc += 0.1;
+		redraw(e);
+	}
+	if ((keycode == 65464) && (e->turn > 0.0))
+	{
+		e->turn -= 0.1;
+		redraw(e);
+	}
+	if ((keycode == 65465) && (e->turn < 3.0))
+	{
+		e->turn += 0.1;
+		redraw(e);
+	}
 	return (0);
 }
 int	expose_hook(t_env *e)
@@ -358,11 +378,14 @@ int	main(int ac, char **av)
 		e.zoom = 20;
 		e.move_x = 800;
 		e.move_y = 400;
+		e.inc = 1.0;
+		e.turn = 1.0;
 		e.file = av[1];
 		e.mlx = mlx_init();
 		if (e.mlx == 0)
 			exit (0);
-		e.win = mlx_new_window(e.mlx, 1980, 1200, "42");
+		e.win = mlx_new_window(e.mlx, 1980, 1400, "FDF");
+		e.img = mlx_new_image(e.mlx, 1980, 1400);
 		mlx_key_hook(e.win, key_hook, &e);
 		mlx_mouse_hook(e.win, mouse_hook, &e);
 		mlx_expose_hook(e.win, expose_hook, &e);
