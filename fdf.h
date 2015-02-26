@@ -6,7 +6,7 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/02/02 16:48:18 by ahua              #+#    #+#             */
-/*   Updated: 2015/02/25 18:19:52 by ahua             ###   ########.fr       */
+/*   Updated: 2015/02/26 20:49:11 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,14 @@
 
 # include <mlx.h>
 # include <unistd.h>
-# include <stdio.h>
 # include <stdlib.h>
 # include "get_next_line.h"
 # include "libft/libft.h"
 # include <fcntl.h>
 # include <math.h>
+
+# define SIZE_X 1920
+# define SIZE_Y 1080
 
 typedef	struct	s_3d
 {
@@ -28,6 +30,15 @@ typedef	struct	s_3d
 	int	y;
 	int	z;
 }				t_3d;
+
+typedef struct	s_img
+{
+	char	*data;
+	int		bpp;
+	int		sizeline;
+	int		endian;
+	void	*img;
+}				t_img;
 
 typedef	struct	s_env
 {
@@ -45,6 +56,9 @@ typedef	struct	s_env
 	int		move_y;
 	float	inc;
 	float	turn;
+	t_img	img;
+	int		**coord;
+	int		alt;
 }				t_env;
 
 typedef	struct	s_point
@@ -81,6 +95,7 @@ void			fill_pallette1(int tab[30]);
 void			fill_pallette2(int tab[30]);
 void			fill_pallette(int tab[30]);
 int				l_map(int x, int min, int max);
+void			ft_pixel_img(t_env *e, int x, int y, int color);
 
 
 

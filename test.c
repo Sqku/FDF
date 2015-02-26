@@ -6,11 +6,19 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2014/12/15 12:33:18 by ahua              #+#    #+#             */
-/*   Updated: 2015/02/25 18:21:12 by ahua             ###   ########.fr       */
+/*   Updated: 2015/02/26 20:51:56 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fdf.h"
+
+void	ft_pixel_img(t_env *e, int x, int y, int color)
+{
+	if (x > 0 && x < SIZE_X && y > 0 && y < SIZE_Y)
+		ft_memcpy(&e->img.data[(x * 4) + (y * e->img.sizeline)],\
+				&color, (size_t)(sizeof(int)));
+}
+
 
 void	line(t_point p1, t_point p2, t_env *e, int color)
 {
@@ -22,7 +30,8 @@ void	line(t_point p1, t_point p2, t_env *e, int color)
 	line.dy = abs(p2.y - p1.y);
 	line.p1 = p1;
 	line.p2 = p2;
-	mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, color);
+	ft_pixel_img(e, line.p1.x, line.p1.y, color);
+	//mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, color);
 	if (line.dx > line.dy)
 		line_1(line, e, color);
 	else
@@ -45,7 +54,8 @@ void	line_1(t_line line, t_env *e, int color)
 			cumul -= line.dx;
 			line.p1.y += line.inc.y;
 		}
-		mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, color);
+		ft_pixel_img(e, line.p1.x, line.p1.y, color);
+		//mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, color);
 	}
 }
 
@@ -65,7 +75,8 @@ void	line_2(t_line line, t_env *e, int color)
 			cumul -= line.dy;
 			line.p1.x += line.inc.x;
 		}
-		mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, color);
+		ft_pixel_img(e, line.p1.x, line.p1.y, color);
+		//mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, color);
 	}
 }
 
@@ -132,14 +143,12 @@ void	fill_pallette(int tab[30])
 
 void	draw(t_env *e)
 {
-	int	**coord;
 	t_3d	d0;
 	t_3d	d1;
 	t_3d	d2;
 	
-	coord = map(e->file, e->nby, e);
-	draw_x(d0, d1, e, coord);
-	draw_y(d0, d2, e, coord);
+	draw_x(d0, d1, e, e->coord);
+	draw_y(d0, d2, e, e->coord);
 }
 
 void	draw_x(t_3d d0, t_3d d1, t_env *e, int **coord)
@@ -157,10 +166,10 @@ void	draw_x(t_3d d0, t_3d d1, t_env *e, int **coord)
 		{
 			d0.x = x * e->zoom;
 			d0.y = y * e->zoom;
-			d0.z = coord[y][x];
+			d0.z = coord[y][x] * e->alt;
 			d1.x = (x + 1) * e->zoom;
 			d1.y = y * e->zoom;
-			d1.z = coord[y][x + 1];
+			d1.z = coord[y][x + 1] * e->alt;
 			p0 = f3d_2d(d0, e);
 			p1 = f3d_2d(d1, e);
 			line(p0, p1, e, e->tab[l_map((d0.z + d1.z) / 2, e->min, e->max)]);
@@ -185,10 +194,10 @@ void	draw_y(t_3d d0, t_3d d2, t_env *e, int **coord)
 		{
 			d0.x = x * e->zoom;
 			d0.y = y * e->zoom;
-			d0.z = coord[y][x];
+			d0.z = coord[y][x] * e->alt;
 			d2.x = x * e->zoom;
 			d2.y = (y + 1) * e->zoom;
-			d2.z = coord[y + 1][x];
+			d2.z = coord[y + 1][x] * e->alt;
 			p0 = f3d_2d(d0, e);
 			p2 = f3d_2d(d2, e);
 			line(p0, p2, e, e->tab[l_map((d0.z + d2.z) / 2, e->min, e->max)]);
@@ -228,7 +237,6 @@ int	**map(char *file, int nb, t_env *e)
 	int		fd;
 	char	**buff;
 	int		**map;
-	int		tmp;
 
 	fd = open(file, O_RDONLY);
 	if ((buff = (char **)malloc(sizeof(char *) * (nb + 1))) == NULL)
@@ -289,24 +297,30 @@ void	get_map2(char **splity, int **map, int i, t_env *e)
 		free(splity[y]);
 	}
 }
-
+#include <string.h>
 void	redraw(t_env *e)
 {
-	mlx_clear_window(e->mlx, e->win);
+	//mlx_clear_window(e->mlx, e->win);
+	ft_bzero(e->img.data, SIZE_X * SIZE_Y * 4);
 	draw(e);
+	mlx_put_image_to_window(e->mlx, e->win, e->img.img, 0, 0);
 }
 
 
 int	mouse_hook(int button, int x, int y, t_env *e)
 {
+	(void)x;
+	(void)y;
 	if ((button == 5) && (e->zoom >= 2))
 	{
-		e->zoom -= 2;
+		e->zoom--;
+		e->alt++;
 		redraw(e);
 	}
 	if ((button == 4) && (e->zoom <= 100))
 	{
-		e->zoom += 2;
+		e->zoom++;
+		e->alt--;
 		redraw(e);
 	}
 	return (0);	
@@ -314,7 +328,7 @@ int	mouse_hook(int button, int x, int y, t_env *e)
 
 int	key_hook(int keycode, t_env *e)
 {
-	printf("key: %d\n", keycode);
+	//printf("key: %d\n", keycode);
 	if (keycode == 65307)
 		exit (0);
 	if ((keycode == 65361) && (e->move_x > -300))
@@ -362,6 +376,18 @@ int	key_hook(int keycode, t_env *e)
 int	expose_hook(t_env *e)
 {
 	draw(e);
+	mlx_put_image_to_window(e->mlx, e->win, e->img.img, 0, 0);
+	return (0);
+}
+
+int	loop_hook(t_env *e)
+{
+	//if(e->re)
+	//{
+	draw(e);
+	mlx_put_image_to_window(e->mlx, e->win, e->img.img, 0, 0);
+	//e->re = 0;
+	//}
 	return (0);
 }
 
@@ -384,11 +410,16 @@ int	main(int ac, char **av)
 		e.mlx = mlx_init();
 		if (e.mlx == 0)
 			exit (0);
-		e.win = mlx_new_window(e.mlx, 1980, 1400, "FDF");
-		e.img = mlx_new_image(e.mlx, 1980, 1400);
+		e.coord = map(e.file, e.nby, &e);
+		e.win = mlx_new_window(e.mlx, SIZE_X, SIZE_Y, "FDF");
+		e.img.img = mlx_new_image(e.mlx, SIZE_X, SIZE_Y);
+		e.img.data = mlx_get_data_addr(e.img.img, &e.img.bpp, &e.img.sizeline, &e.img.endian);
+	//draw(e);
+	//mlx_put_image_to_window(e->mlx, e->win, e->img.img, 1980, 1400);
 		mlx_key_hook(e.win, key_hook, &e);
 		mlx_mouse_hook(e.win, mouse_hook, &e);
-		mlx_expose_hook(e.win, expose_hook, &e);
+		//mlx_expose_hook(e.win, expose_hook, &e);
+		mlx_loop_hook(e.mlx, loop_hook, &e);
 		mlx_loop(e.mlx);
 	}
 	else 
