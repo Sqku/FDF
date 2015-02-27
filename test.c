@@ -6,7 +6,7 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2014/12/15 12:33:18 by ahua              #+#    #+#             */
-/*   Updated: 2015/02/26 20:51:56 by ahua             ###   ########.fr       */
+/*   Updated: 2015/02/27 19:59:37 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ void	line(t_point p1, t_point p2, t_env *e, int color)
 	line.p1 = p1;
 	line.p2 = p2;
 	ft_pixel_img(e, line.p1.x, line.p1.y, color);
-	//mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, color);
 	if (line.dx > line.dy)
 		line_1(line, e, color);
 	else
@@ -55,7 +54,6 @@ void	line_1(t_line line, t_env *e, int color)
 			line.p1.y += line.inc.y;
 		}
 		ft_pixel_img(e, line.p1.x, line.p1.y, color);
-		//mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, color);
 	}
 }
 
@@ -76,7 +74,6 @@ void	line_2(t_line line, t_env *e, int color)
 			line.p1.x += line.inc.x;
 		}
 		ft_pixel_img(e, line.p1.x, line.p1.y, color);
-		//mlx_pixel_put(e->mlx, e->win, line.p1.x, line.p1.y, color);
 	}
 }
 
@@ -166,13 +163,14 @@ void	draw_x(t_3d d0, t_3d d1, t_env *e, int **coord)
 		{
 			d0.x = x * e->zoom;
 			d0.y = y * e->zoom;
-			d0.z = coord[y][x] * e->alt;
+			d0.z = (coord[y][x] + e->alti) * (e->alt / e->down);
 			d1.x = (x + 1) * e->zoom;
 			d1.y = y * e->zoom;
-			d1.z = coord[y][x + 1] * e->alt;
+			d1.z = (coord[y][x + 1] + e->alti) * (e->alt / e->down);
 			p0 = f3d_2d(d0, e);
 			p1 = f3d_2d(d1, e);
-			line(p0, p1, e, e->tab[l_map((d0.z + d1.z) / 2, e->min, e->max)]);
+			line(p0, p1, e, e->tab[l_map((coord[y][x] + coord[y][x + 1]) / 2,
+						e->min, e->max)]);
 			x++;
 		}
 		y++;
@@ -186,24 +184,23 @@ void	draw_y(t_3d d0, t_3d d2, t_env *e, int **coord)
 	t_point	p0;
 	t_point	p2;
 
-	x = 0;
-	while (x <= (e->nbx - 1))
+	x = -1;
+	while (++x <= (e->nbx - 1))
 	{
-		y = 0;
-		while (y < e->nby)
+		y = -1;
+		while (++y < e->nby)
 		{
 			d0.x = x * e->zoom;
 			d0.y = y * e->zoom;
-			d0.z = coord[y][x] * e->alt;
+			d0.z = (coord[y][x] + e->alti) * (e->alt / e->down);
 			d2.x = x * e->zoom;
 			d2.y = (y + 1) * e->zoom;
-			d2.z = coord[y + 1][x] * e->alt;
+			d2.z = (coord[y + 1][x] + e->alti) * (e->alt / e->down);
 			p0 = f3d_2d(d0, e);
 			p2 = f3d_2d(d2, e);
-			line(p0, p2, e, e->tab[l_map((d0.z + d2.z) / 2, e->min, e->max)]);
-			y++;
+			line(p0, p2, e, e->tab[l_map((coord[y][x] + coord[y + 1][x]) / 2,
+						e->min, e->max)]);
 		}
-		x++;
 	}
 }
 
@@ -235,26 +232,20 @@ int	nb_line(char *file)
 int	**map(char *file, int nb, t_env *e)
 {
 	int		fd;
-	char	**buff;
 	int		**map;
 
 	fd = open(file, O_RDONLY);
-	if ((buff = (char **)malloc(sizeof(char *) * (nb + 1))) == NULL)
-	{
-		ft_putstr_fd("malloc fail\n", 2);
-		exit (0);
-	}
 	if ((map = (int **)malloc(sizeof(int *) * (nb + 1))) == NULL)
 	{
 		ft_putstr_fd("malloc fail\n", 2);
 		exit (0);
 	}
-	get_map(fd, buff, map, e);
+	get_map(fd, map, e);
 	close(fd);
 	return (map);
 }
 
-void	get_map(int fd, char **buffer, int **mapi, t_env *e)
+void	get_map(int fd, int **mapi, t_env *e)
 {
 	int		i;
 	char	*line;
@@ -264,20 +255,16 @@ void	get_map(int fd, char **buffer, int **mapi, t_env *e)
 	while (get_next_line(fd, &line) > 0)
 	{
 		mapi[i] = (int *)malloc(sizeof(int) * (ft_strlen(line) + 1));
-		buffer[i] = (char *)malloc(sizeof(char) * (ft_strlen(line) + 1));
-		if (!mapi[i] || !buffer[i])
+		if (!mapi[i])
 		{
 			ft_putstr_fd("malloc fail\n", 2);
 			exit (0);
 		}
-		buffer[i] = ft_strcpy(buffer[i], line);
-		split = ft_strsplit(buffer[i], ' ');
+		split = ft_strsplit(line, ' ');
 		get_map2(split, mapi, i, e);
-		free(buffer[i]);
 		free(split);
 		i++;
 	}
-	free(buffer);
 }
 
 void	get_map2(char **splity, int **map, int i, t_env *e)
@@ -285,6 +272,11 @@ void	get_map2(char **splity, int **map, int i, t_env *e)
 	int y;
 
 	y = 0;
+	if (!i)
+	{
+		e->max = ft_atoi(splity[0]) * -1;
+		e->min = e->max;
+	}
 	while (splity[y])
 	{
 		map[i][y] = ft_atoi(splity[y]) * -1;
@@ -297,10 +289,9 @@ void	get_map2(char **splity, int **map, int i, t_env *e)
 		free(splity[y]);
 	}
 }
-#include <string.h>
+
 void	redraw(t_env *e)
 {
-	//mlx_clear_window(e->mlx, e->win);
 	ft_bzero(e->img.data, SIZE_X * SIZE_Y * 4);
 	draw(e);
 	mlx_put_image_to_window(e->mlx, e->win, e->img.img, 0, 0);
@@ -311,24 +302,26 @@ int	mouse_hook(int button, int x, int y, t_env *e)
 {
 	(void)x;
 	(void)y;
-	if ((button == 5) && (e->zoom >= 2))
+	if ((button == 5))
 	{
-		e->zoom--;
-		e->alt++;
-		redraw(e);
+		if (e->zoom)
+			e->zoom--;
+		if (e->alt > 0.0)
+			e->alt--;
+		e->re = 1;
 	}
-	if ((button == 4) && (e->zoom <= 100))
+	if ((button == 4))
 	{
 		e->zoom++;
-		e->alt--;
-		redraw(e);
+		e->alt++;
+		e->re = 1;
 	}
 	return (0);	
 }
-
+#include <stdio.h>
 int	key_hook(int keycode, t_env *e)
 {
-	//printf("key: %d\n", keycode);
+	printf("key: %d\n", keycode);
 	if (keycode == 65307)
 		exit (0);
 	if ((keycode == 65361) && (e->move_x > -300))
@@ -371,6 +364,16 @@ int	key_hook(int keycode, t_env *e)
 		e->turn += 0.1;
 		redraw(e);
 	}
+	if (keycode == 65460)
+	{
+		e->alti++;
+		e->re = 1;
+	}
+	if (keycode == 65457)
+	{
+		e->alti--;
+		e->re = 1;
+	}
 	return (0);
 }
 int	expose_hook(t_env *e)
@@ -382,12 +385,11 @@ int	expose_hook(t_env *e)
 
 int	loop_hook(t_env *e)
 {
-	//if(e->re)
-	//{
-	draw(e);
-	mlx_put_image_to_window(e->mlx, e->win, e->img.img, 0, 0);
-	//e->re = 0;
-	//}
+	if(e->re)
+	{
+		redraw(e);
+		e->re = 0;
+	}
 	return (0);
 }
 
@@ -398,10 +400,11 @@ int	main(int ac, char **av)
 	if (ac == 2)
 	{
 		fill_pallette(e.tab);
-		e.min = -10000;
-		e.max = 10000;
 		e.nby = nb_line(av[1]);
 		e.zoom = 20;
+		e.alt = 1.0;
+		e.alti = 0;
+		e.down = 1.0;
 		e.move_x = 800;
 		e.move_y = 400;
 		e.inc = 1.0;
@@ -414,11 +417,9 @@ int	main(int ac, char **av)
 		e.win = mlx_new_window(e.mlx, SIZE_X, SIZE_Y, "FDF");
 		e.img.img = mlx_new_image(e.mlx, SIZE_X, SIZE_Y);
 		e.img.data = mlx_get_data_addr(e.img.img, &e.img.bpp, &e.img.sizeline, &e.img.endian);
-	//draw(e);
-	//mlx_put_image_to_window(e->mlx, e->win, e->img.img, 1980, 1400);
 		mlx_key_hook(e.win, key_hook, &e);
 		mlx_mouse_hook(e.win, mouse_hook, &e);
-		//mlx_expose_hook(e.win, expose_hook, &e);
+		mlx_expose_hook(e.win, expose_hook, &e);
 		mlx_loop_hook(e.mlx, loop_hook, &e);
 		mlx_loop(e.mlx);
 	}

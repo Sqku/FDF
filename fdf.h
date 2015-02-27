@@ -6,7 +6,7 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/02/02 16:48:18 by ahua              #+#    #+#             */
-/*   Updated: 2015/02/26 20:49:11 by ahua             ###   ########.fr       */
+/*   Updated: 2015/02/27 19:58:15 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,10 @@ typedef	struct	s_env
 	float	turn;
 	t_img	img;
 	int		**coord;
-	int		alt;
+	float	alt;
+	int		re;
+	int		alti;
+	float	down;
 }				t_env;
 
 typedef	struct	s_point
@@ -89,7 +92,7 @@ int				get_next_line(int fd, char **line);
 t_point			f3d_2d(t_3d p3d, t_env *e);
 int				nb_line(char *file);
 int				**map(char *file, int nb, t_env *e);
-void			get_map(int fd, char **buffer, int **mapi, t_env *e);
+void			get_map(int fd, int **mapi, t_env *e);
 void			get_map2(char **splity, int **map, int i, t_env *e);
 void			fill_pallette1(int tab[30]);
 void			fill_pallette2(int tab[30]);
