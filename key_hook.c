@@ -6,7 +6,7 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/03/03 21:29:20 by ahua              #+#    #+#             */
-/*   Updated: 2015/03/03 21:40:28 by ahua             ###   ########.fr       */
+/*   Updated: 2015/03/03 22:19:53 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,12 +24,12 @@ void	move_x(int keycode, t_env *e)
 	if (keycode == 123)
 	{
 		e->move_x -= 50;
-		redraw(e);
+		e->re = 1;
 	}
 	if (keycode == 124)
 	{
 		e->move_x += 50;
-		redraw(e);
+		e->re = 1;
 	}
 }
 
@@ -38,12 +38,12 @@ void	move_y(int keycode, t_env *e)
 	if (keycode == 126)
 	{
 		e->move_y -= 50;
-		redraw(e);
+		e->re = 1;
 	}
 	if (keycode == 125)
 	{
 		e->move_y += 50;
-		redraw(e);
+		e->re = 1;
 	}
 }
 
@@ -52,22 +52,22 @@ void	move_inc(int keycode, t_env *e)
 	if ((keycode == 78) && (e->inc > 0.0))
 	{
 		e->inc -= 0.1;
-		redraw(e);
+		e->re = 1;
 	}
 	if ((keycode == 69) && (e->inc < 3.0))
 	{
 		e->inc += 0.1;
-		redraw(e);
+		e->re = 1;
 	}
 	if ((keycode == 91) && (e->turn > 0.0))
 	{
 		e->turn -= 0.1;
-		redraw(e);
+		e->re = 1;
 	}
 	if ((keycode == 92) && (e->turn < 3.0))
 	{
 		e->turn += 0.1;
-		redraw(e);
+		e->re = 1;
 	}
 }
 
@@ -78,15 +78,16 @@ int		key_hook(int keycode, t_env *e)
 	move_x(keycode, e);
 	move_y(keycode, e);
 	move_inc(keycode, e);
+	restart(keycode, e);
 	if (keycode == 86)
 	{
 		e->alt -= 1.0;
-		redraw(e);
+		e->re = 1;
 	}
 	if (keycode == 89)
 	{
 		e->alt += 1.0;
-		redraw(e);
+		e->re = 1;
 	}
 	return (0);
 }

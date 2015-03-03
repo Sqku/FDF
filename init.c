@@ -6,7 +6,7 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/03/03 21:28:15 by ahua              #+#    #+#             */
-/*   Updated: 2015/03/03 21:28:28 by ahua             ###   ########.fr       */
+/*   Updated: 2015/03/03 22:20:49 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,5 +29,25 @@ void	init(t_env *e, char **av)
 	{
 		ft_putstr_fd("fdf: ca sent le fdp tout d'un coups\n", 2);
 		exit (0);
+	}
+}
+
+void	init_v(t_env *e)
+{
+	e->zoom = 20;
+	e->alt = 20.0;
+	e->down = 1.0;
+	e->move_x = 800;
+	e->move_y = 400;
+	e->inc = 1.0;
+	e->turn = 1.0;
+}
+
+void	restart(int keycode, t_env *e)
+{
+	if (keycode == 49)
+	{
+		init_v(e);
+		e->re = 1;
 	}
 }

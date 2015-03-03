@@ -103,4 +103,6 @@ void			move_x(int keycode, t_env *e);
 void			move_y(int keycode, t_env *e);
 void			move_inc(int keycode, t_env *e);
 void			init(t_env *e, char **av);
+void			init_v(t_env *e);
+void			restart(int keycode, t_env *e);
 #endif
