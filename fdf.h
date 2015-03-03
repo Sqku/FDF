@@ -6,7 +6,7 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/02/02 16:48:18 by ahua              #+#    #+#             */
-/*   Updated: 2015/02/27 19:58:15 by ahua             ###   ########.fr       */
+/*   Updated: 2015/03/03 21:40:54 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,6 @@ typedef	struct	s_env
 	int		**coord;
 	float	alt;
 	int		re;
-	int		alti;
 	float	down;
 }				t_env;
 
@@ -85,6 +84,7 @@ void			line_2(t_line line, t_env *e, int color);
 void			draw(t_env *e);
 void			draw_x(t_3d d0, t_3d d1, t_env *e, int **coord);
 void			draw_y(t_3d d0, t_3d d2, t_env *e, int **coord);
+void			redraw(t_env *e);
 int				mouse_hook(int button, int x, int y, t_env *e);
 int				key_hook(int keycode, t_env *e);
 int				expose_hook(t_env *e);
@@ -99,7 +99,8 @@ void			fill_pallette2(int tab[30]);
 void			fill_pallette(int tab[30]);
 int				l_map(int x, int min, int max);
 void			ft_pixel_img(t_env *e, int x, int y, int color);
-
-
-
+void			move_x(int keycode, t_env *e);
+void			move_y(int keycode, t_env *e);
+void			move_inc(int keycode, t_env *e);
+void			init(t_env *e, char **av);
 #endif

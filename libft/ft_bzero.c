@@ -6,7 +6,7 @@
 /*   By: ahua <ahua@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2014/11/04 19:28:57 by ahua              #+#    #+#             */
-/*   Updated: 2014/11/06 14:20:11 by ahua             ###   ########.fr       */
+/*   Updated: 2015/03/03 21:43:55 by ahua             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,5 +14,9 @@
 
 void	ft_bzero(void *s, size_t n)
 {
-	ft_memset(s, 0, n);
+	unsigned char	*str;
+
+	str = (unsigned char*)s;
+	while (n--)
+		*str++ = 0;
 }
